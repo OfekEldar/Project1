@@ -1,0 +1,56 @@
+@@ -0,0 +1,55 @@
+import cmath
+import math
+import statistics as st
+import matplotlib.pyplot as plt
+import numpy as np
+import random
+import pandas as pd
+import csv
+
+def main():
+    df = pd.read_csv('TA_Nadlan_Excel.csv')
+    print(df.head())
+    column_data = df['EstValChange']
+    EstValChng = np.array(column_data)
+    print(EstValChng)
+    R = CorrelationEstimator(EstValChng)
+    plt.plot(EstValChng)
+    plt.show()
+    plt.plot(R)
+    plt.show()
+    return
+
+def CorrelationEstimator(x):
+    N = len(x)
+    R =[]
+    for l in range(N):
+        R.append(0)
+        for n in range(N-abs(l)):
+            R[l] += x[n+l]*x[n]/(N-abs(l))
+    return R
+def FastLinearConvolution(x,y):
+    N1 = len(x)
+    N2 = len(y)
+    zero_x = [0]*N1
+    zero_y = [0]*N2
+    x = np.concatenate((x, zero_y))
+    y = np.concatenate((y, zero_x))
+    z = np.fft.ifft(np.fft.fft(x)*np.fft.fft(y))
+    z = np.real(z)
+    return z
+def KelmanFilterRecursive2(Y,A,Q,R,H,K,n,N,dnn,pnn,dnn_0,pnn_0,pnArray): 
+    I = np.eye(len(Y))
+    if(n == 0):
+        return dnn_0,pnn_0
+    fir,sec = KelmanFilterRecursive2(Y,A,Q,R,H,K,n-1,N,dnn,pnn,dnn_0,pnn_0,pnArray)
+    dnn1 = np.matmul(A,fir)
+    pnn1 = np.matmul(np.matmul(A,sec),np.transpose(A))+Q
+    inverseMatrix = np.matmul(H,(np.matmul(pnn1,np.transpose(H))))+R
+    K = np.matmul(pnn1,np.matmul(np.transpose(H),np.linalg.inv(inverseMatrix)))
+    dnn = dnn1 + np.matmul(K,(Y-np.matmul(H,dnn1)))
+    pnn = np.matmul((I - np.matmul(K,H)),pnn1)
+    pnArray.append(pnn[0][0])
+    return dnn, pnn
+if __name__ == "__main__":
+    main()
